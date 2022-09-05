@@ -1,12 +1,11 @@
 package site.metacoding.red.domain.boards;
 
 import java.sql.Timestamp;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 
-
+@Setter
 @Getter
 public class Boards {
 	private Integer id;
