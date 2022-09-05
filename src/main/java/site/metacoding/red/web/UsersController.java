@@ -34,7 +34,6 @@ public class UsersController {
 		}else { // 인증안됨
 			return "redirect:/loginForm";
 		}
-		
 	}
 	
 	@PostMapping("/join")
