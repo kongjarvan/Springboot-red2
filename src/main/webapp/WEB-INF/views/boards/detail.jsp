@@ -4,13 +4,24 @@
 
 <div class="container">
 	<br /> <br />
+	
+	<div class="d-flex">
+		<Form>
+			<Button class="btn btn-warning">수정하러가기</Button>
+		</Form>
 
-		<div>
-			<h3>${boards.title}</h3>
-		</div>
-		<hr />
+		<Form action="/boards/${boards.id}/delete" method="post">
+			<Button class="btn btn-danger">삭제</Button>
+		</Form>
+	</div>
 
-		<div>${boards.content}</div>
+	<br />
+	<div>
+		<h3>${boards.title}</h3>
+	</div>
+	<hr />
+
+	<div>${boards.content}</div>
 
 
 
