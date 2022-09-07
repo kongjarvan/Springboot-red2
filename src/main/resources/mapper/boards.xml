@@ -3,34 +3,65 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="site.metacoding.red.domain.boards.BoardsDao">
-	
+
+
+	<select id="paging"
+		resultType="site.metacoding.red.web.dto.response.boards.PagingDto">
+		SELECT
+		blockCount,
+		currentPage/blockCount currentBlock,
+		floor(currentPage/5)*blockCount+1 startPageNum,
+		floor(currentPage/5)*blockCount+5 lastPageNum,
+		totalCount,
+		totalPage,
+		currentPage,
+		decode
+		(currentPage, ceil(totalCount/3)-1, 1, 0) last,
+		decode (currentPage, 0,
+		1, 0) first
+		from
+		(
+		select 5 blockCount, #{currentBlock} currentBlock,
+		#{startPageNum} startPageNum, #{lastPageNum} lastPageNum, count(*)
+		totalCount, ceil(Count(*)/3) totalPage, #{page} currentPage, 0 last, 0
+		first
+		from boards
+		)
+	</select>
+
 	<insert id="insert">
-		INSERT INTO boards (id, title, content, usersId, createdAt)
-		VALUES(boards_seq.nextval, #{title}, #{content}, #{usersId}, sysdate)
+		INSERT INTO boards (id, title, content, usersId,
+		createdAt)
+		VALUES(boards_seq.nextval, #{title}, #{content}, #{usersId},
+		sysdate)
 	</insert>
 
-	<select id="findById" resultType="site.metacoding.red.web.dto.response.boards.MainDto">
+	<select id="findById"
+		resultType="site.metacoding.red.domain.boards.Boards">
+		SELECT title, content
+		FROM boards
+		WHERE id=#{id}
+	</select>
+
+	<select id="findAll"
+		resultType="site.metacoding.red.web.dto.response.boards.MainDto">
 		SELECT b.id, b.title, u.username
 		FROM boards b
-		INNER JOIN users u
-		ON b.usersId = u.id
-		WHERE b.id=${id}
-	</select>
-	
-	<select id="findAll" resultType="site.metacoding.red.web.dto.response.boards.MainDto">
-		SELECT b.id, b.title, u.username
-		FROM boards b 
-		INNER JOIN users u
+		INNER JOIN
+		users u
 		ON b.usersId = u.id
 		ORDER BY b.id DESC
+		OFFSET #{startNum}
+		ROWS
+		FETCH NEXT 3 ROWS ONLY
 	</select>
-	
+
 	<update id="update">
-	
+
 	</update>
-	
+
 	<delete id="delete">
-	
+
 	</delete>
 
 </mapper>

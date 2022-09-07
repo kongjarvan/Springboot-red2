@@ -1,18 +1,21 @@
 package site.metacoding.red.web;
 
 import java.util.List;
+
 import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+
 import lombok.RequiredArgsConstructor;
-import site.metacoding.red.domain.boards.Boards;
 import site.metacoding.red.domain.boards.BoardsDao;
 import site.metacoding.red.domain.users.Users;
 import site.metacoding.red.web.dto.request.boards.WriteDto;
 import site.metacoding.red.web.dto.response.boards.MainDto;
+import site.metacoding.red.web.dto.response.boards.PagingDto;
 
 @RequiredArgsConstructor
 @Controller
@@ -31,7 +34,6 @@ public class BoardsController {
 		// 3. BoardsDao로 접근해서 insert 메서드 호출
 		// 조건: dto를 entity로 변환해서 인수로 담아줌
 		// 조건: entity에는 세션의 principal에 getId가 필요하다
-		
 		Users principal = (Users)session.getAttribute("principal");
 		
 		if(principal==null) {
@@ -42,19 +44,40 @@ public class BoardsController {
 		return "redirect:/";
 	}
 	
+	// http://localhost:8000/board/?page=
 	@GetMapping({"/","/boards"})
-	public String getBoardList(Model model) {
-		List<MainDto> boardsList = boardsDao.findAll();
+	public String getBoardList(Model model, Integer page) { // 0->0, 1->10, 2->20
+		if(page==null) page=0; // 한줄짜리는 중괄호 필요 없음
+		int startNum = page*3;
+		List<MainDto> boardsList = boardsDao.findAll(startNum);
+		PagingDto paging = boardsDao.paging(page);
+		
+		final int blockCount = 5;
+		int currentBlock = page/blockCount;
+		int startPageNum = 1+blockCount*currentBlock;
+		int lastPageNum = 5+blockCount*currentBlock;
+		
+		if(paging.getTotalPage()<lastPageNum) {
+			lastPageNum = paging.getTotalPage();
+		}
+		
+		paging.setBlockCount(blockCount);
+		paging.setCurrentBlock(currentBlock);
+		paging.setStartPageNum(startPageNum);
+		paging.setLastPageNum(lastPageNum);
+		
+		
 		model.addAttribute("boardsList", boardsList);
+		model.addAttribute("paging", paging);
 		return "boards/main";
 	}
 	
 	
 	@GetMapping("/boards/{id}")
 	public String getBoardList(@PathVariable Integer id, Model model) {
-		Boards boards = boardsDao.findById(id);
-		model.addAttribute("boardsList", boards);
-		return "boards/main";
+		model.addAttribute("boards", boardsDao.findById(id));
+		return "boards/detail";
+		
 	}
 	
 	
