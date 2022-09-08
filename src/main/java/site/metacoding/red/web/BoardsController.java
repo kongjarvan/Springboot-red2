@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import site.metacoding.red.domain.boards.Boards;
 import site.metacoding.red.domain.boards.BoardsDao;
 import site.metacoding.red.domain.users.Users;
+import site.metacoding.red.web.dto.request.boards.UpdateDto;
 import site.metacoding.red.web.dto.request.boards.WriteDto;
 import site.metacoding.red.web.dto.response.boards.MainDto;
 import site.metacoding.red.web.dto.response.boards.PagingDto;
@@ -26,28 +27,96 @@ public class BoardsController {
 	private final BoardsDao boardsDao;
 	// @postmapping("/boards/{id}/delete")
 	// @postmapping("/boards/{id}/update") -> 자바스크립트로 할게 아니라면 put delete는 post로 해야됨
-
-	@PostMapping("/boards/{id}/delete")
-	public String DeleteBoards(@PathVariable Integer id) {
+	
+	@PostMapping("/boards/{id}/update")
+	public String Update(@PathVariable Integer id, UpdateDto updateDto) {
+		// 1. 영속화
 		Boards boardsPS = boardsDao.findById(id);
-		// 인증체크)
 		Users principal = (Users) session.getAttribute("principal");
+		
+		// 비정상 요청 체크
+		if (boardsPS == null) { // if는 비정상 logic을 필터링 하는 역할로 사용하는것이 좋다.			
+			return "errors/badPage";
+		}
+		
+		
+		// 인증체크)
+		
 		if (principal == null) {
 			return "redirect:/loginForm";
 		}
 		
+		
 		// 권한체크 (principal.getId() == boardsPS.getUsersId)
-		if (boardsPS == null) { // if는 비정상 logic을 필터링 하는 역할로 사용하는것이 좋다.			
-			return "redirect:/boards/" + id;
-		}
-		
 		if(principal.getId() != boardsPS.getUsersId()) {
-			System.out.println("ㅁㄴㅇㄹ");
-			return "redirect:/boards/" + id;
+			return "errors/badPage";
+		}
+		
+		// 2. 변경
+		boardsPS.글수정(updateDto);
+		
+		
+		// 3. 수행
+		boardsDao.update(boardsPS);
+		return"redirect:/boards/"+id;
+	}
+	
+	
+	@GetMapping("/boards/{id}/updateForm")
+	public String UpdateForm(@PathVariable Integer id, Model model) {
+		Boards boardsPS = boardsDao.findById(id);
+		Users principal = (Users) session.getAttribute("principal");
+		
+		// 비정상 요청 체크
+		if (boardsPS == null) { // if는 비정상 logic을 필터링 하는 역할로 사용하는것이 좋다.			
+			return "errors/badPage";
 		}
 		
 		
-		boardsDao.delete(id);
+		// 인증체크)
+		
+		if (principal == null) {
+			return "redirect:/loginForm";
+		}
+		
+		
+		// 권한체크 (principal.getId() == boardsPS.getUsersId)
+		if(principal.getId() != boardsPS.getUsersId()) {
+			return "errors/badPage";
+		}
+		
+		model.addAttribute(boardsPS);
+		
+		
+		return "boards/updateForm";
+	}
+	
+
+	@PostMapping("/boards/{id}/delete")
+	public String DeleteBoards(@PathVariable Integer id) {
+		Boards boardsPS = boardsDao.findById(id);
+		Users principal = (Users) session.getAttribute("principal");
+		
+		// 비정상 요청 체크
+		if (boardsPS == null) { // if는 비정상 logic을 필터링 하는 역할로 사용하는것이 좋다.			
+			return "errors/badPage";
+		}
+		
+		
+		// 인증체크)
+		
+		if (principal == null) {
+			return "redirect:/loginForm";
+		}
+		
+		
+		// 권한체크 (principal.getId() == boardsPS.getUsersId)
+		if(principal.getId() != boardsPS.getUsersId()) {
+			return "errors/badPage";
+		}
+		
+		
+		boardsDao.delete(id); // 핵심 로직
 		return "redirect:/";
 	}
 
@@ -76,20 +145,9 @@ public class BoardsController {
 		int startNum = page * 3;
 		List<MainDto> boardsList = boardsDao.findAll(startNum);
 		PagingDto paging = boardsDao.paging(page);
+		paging.makeBlockInfo();
 
-		final int blockCount = 5;
-		int currentBlock = page / blockCount;
-		int startPageNum = 1 + blockCount * currentBlock;
-		int lastPageNum = 5 + blockCount * currentBlock;
 
-		if (paging.getTotalPage() < lastPageNum) {
-			lastPageNum = paging.getTotalPage();
-		}
-
-		paging.setBlockCount(blockCount);
-		paging.setCurrentBlock(currentBlock);
-		paging.setStartPageNum(startPageNum);
-		paging.setLastPageNum(lastPageNum);
 
 		model.addAttribute("boardsList", boardsList);
 		model.addAttribute("paging", paging);
