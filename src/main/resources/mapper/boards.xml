@@ -7,25 +7,21 @@
 
 	<select id="paging"
 		resultType="site.metacoding.red.web.dto.response.boards.PagingDto">
-		SELECT
-		blockCount,
-		currentPage/blockCount currentBlock,
-		floor(currentPage/5)*blockCount+1 startPageNum,
-		floor(currentPage/5)*blockCount+5 lastPageNum,
-		totalCount,
+		SELECT totalCount,
 		totalPage,
 		currentPage,
-		decode
-		(currentPage, ceil(totalCount/3)-1, 1, 0) last,
-		decode (currentPage, 0,
-		1, 0) first
-		from
+		decode(currentPage, 0, 1, 0) first,
+		decode(currentPage, totalPage-1, 1,
+		0) last
+		FROM
 		(
-		select 5 blockCount, #{currentBlock} currentBlock,
-		#{startPageNum} startPageNum, #{lastPageNum} lastPageNum, count(*)
-		totalCount, ceil(Count(*)/3) totalPage, #{page} currentPage, 0 last, 0
-		first
-		from boards
+		select count(*) totalCount, ceil(count(*)/3) totalPage,
+		#{page} currentPage, 0
+		first, 0 last
+		FROM boards
+		<if test="keyword != null">
+			WHERE title like '%'||#{keyword}||'%'
+		</if>
 		)
 	</select>
 
@@ -42,6 +38,21 @@
 		FROM boards
 		WHERE id=#{id}
 	</select>
+	
+		<select id="findSearch"
+		resultType="site.metacoding.red.web.dto.response.boards.MainDto">
+		SELECT b.id, b.title, u.username
+		FROM boards b
+		INNER JOIN
+		users u
+		ON b.usersId = u.id
+		WHERE title like '%'||#{keyword}||'%'
+		ORDER BY b.id DESC
+		OFFSET #{startNum}
+		ROWS
+		FETCH NEXT 3 ROWS ONLY
+	</select>
+	
 
 	<select id="findAll"
 		resultType="site.metacoding.red.web.dto.response.boards.MainDto">
