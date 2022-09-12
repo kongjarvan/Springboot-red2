@@ -40,6 +40,7 @@ public class UsersController {
 		}
 		
 		usersDao.delete(id);
+		session.invalidate();
 		return "redirect:/";
 	}
 	
@@ -77,6 +78,10 @@ public class UsersController {
 		if(principal == null) { // 인증안됨
 			return "redirect:/loginForm";
 			}
+		
+		if (principal.getId() != usersPS.getId()) {
+			return "errors/badPage";
+		}
 		
 		model.addAttribute(usersPS);	
 		return "users/updateForm";
