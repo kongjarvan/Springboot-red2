@@ -23,7 +23,7 @@
 	</select>
 	
 	<update id="update">
-	
+		UPDATE users SET password = #{password}, email = #{email} WHERE id = #{id}
 	</update>
 	
 	<delete id="delete">
