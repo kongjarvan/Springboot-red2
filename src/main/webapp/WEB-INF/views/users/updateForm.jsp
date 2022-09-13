@@ -1,11 +1,14 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ include file="../layout/header.jsp"%>
 
 <div class="container">
+	<Form action="/users/${users.id}/delete" method="post">
+		<Button class="btn btn-danger">회원삭제</Button>
+	</Form>
 	<form action="/users/${users.id}/update" method="post">
 		<div class="mb-3 mt-3">
-			<input type="text" class="form-control" placeholder="Enter title" name="password" value="${users.password}" required="이 입력란을 작성하세요" maxlength="15">
+			<input type="text" class="form-control" placeholder="Enter title" name="password"
+				value="${users.password}" required="이 입력란을 작성하세요" maxlength="15">
 		</div>
 		<div class="mb-3">
 			<textarea class="form-control" name="email" required="이 입력란을 작성하세요">${users.email}</textarea>
